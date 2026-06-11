@@ -41,16 +41,21 @@ jobs:
       - uses: actions/create-github-app-token@v3
         id: app-token-fallback
         if: steps.app-token.outcome == 'failure'
+        # Forks without the app secrets must not hard-fail; work steps below
+        # skip when no token was minted.
+        continue-on-error: true
         with:
           app-id: "2971289"
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_FALLBACK }}
       - uses: actions/labeler@v6
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           configuration-path: .github/labeler.yml
           repo-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           sync-labels: true
       - name: Apply PR size label
         uses: actions/github-script@v9
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           github-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           script: |
@@ -140,6 +145,7 @@ jobs:
             });
       - name: Apply maintainer or trusted-contributor label
         uses: actions/github-script@v9
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           github-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           script: |
@@ -211,6 +217,7 @@ jobs:
             // }
       - name: Apply beta-blocker title label
         uses: actions/github-script@v9
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           github-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           script: |
@@ -264,6 +271,7 @@ jobs:
             }
       - name: Apply too-many-prs label
         uses: actions/github-script@v9
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           github-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           script: |
@@ -475,11 +483,15 @@ jobs:
       - uses: actions/create-github-app-token@v3
         id: app-token-fallback
         if: steps.app-token.outcome == 'failure'
+        # Forks without the app secrets must not hard-fail; work steps below
+        # skip when no token was minted.
+        continue-on-error: true
         with:
           app-id: "2971289"
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_FALLBACK }}
       - name: Backfill PR labels
         uses: actions/github-script@v9
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           github-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           script: |
@@ -774,11 +786,15 @@ jobs:
       - uses: actions/create-github-app-token@v3
         id: app-token-fallback
         if: steps.app-token.outcome == 'failure'
+        # Forks without the app secrets must not hard-fail; work steps below
+        # skip when no token was minted.
+        continue-on-error: true
         with:
           app-id: "2971289"
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_FALLBACK }}
       - name: Apply maintainer or trusted-contributor label
         uses: actions/github-script@v9
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           github-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           script: |
@@ -850,6 +866,7 @@ jobs:
             // }
       - name: Apply beta-blocker title label
         uses: actions/github-script@v9
+        if: steps.app-token.outputs.token != '' || steps.app-token-fallback.outputs.token != ''
         with:
           github-token: ${{ steps.app-token.outputs.token || steps.app-token-fallback.outputs.token }}
           script: |
