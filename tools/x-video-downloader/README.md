@@ -37,17 +37,40 @@ Raspberry Pi…). iPhones can't run shell scripts directly.
    You should get a file in `~/Downloads/x-videos/` and the path printed at the
    end.
 
-### Private / age-gated posts
+### Logging into X (required for most videos)
 
-Some videos need a logged-in session. Export your cookies once and point the
-script at them:
+X now hides almost every video behind a login, and yt-dlp can no longer sign in
+with a username/password. The fix is to reuse the cookies from a browser where
+**you are already logged into x.com on the download machine**:
+
+1. On the download machine, open a browser and log into <https://x.com>.
+2. Tell the script which browser that is:
+   ```bash
+   export X_DL_BROWSER="chrome"   # or firefox, safari, edge, brave
+   ```
+   To target a specific profile, use yt-dlp's syntax, e.g.
+   `export X_DL_BROWSER="chrome:Profile 1"` or `"firefox:work"`.
+3. That's it — downloads now run as your logged-in session.
+
+Notes per browser:
+- **Chrome/Brave/Edge**: may need the browser **closed** so the cookie DB isn't
+  locked. Firefox usually works while open.
+- **Safari** (macOS): grant your terminal/SSH "Full Disk Access" in System
+  Settings → Privacy & Security so it can read Safari's cookies.
+
+If the script hits a login-gated post without cookies configured, it tells you
+exactly this and exits — so a failed Shortcut run is self-explanatory.
+
+#### Headless server (no browser)
+
+Export a `cookies.txt` once (e.g. with the "Get cookies.txt LOCALLY" browser
+extension while logged into x.com) and point the script at it:
 
 ```bash
-# Either a Netscape cookies.txt exported from your browser:
 export X_DL_COOKIES="$HOME/.config/x-cookies.txt"
-# …or pull live from a browser on the same machine:
-export X_DL_COOKIES_FROM="safari"   # or chrome, firefox, edge, brave
 ```
+
+Re-export when the session expires (X cookies are long-lived but not forever).
 
 ## The Shortcut (iPhone / iPad / Mac)
 
@@ -86,10 +109,15 @@ SSH, the script downloads the video, and the path comes back as the result.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
+| `X_DL_BROWSER` | Browser you're logged into x.com with (`chrome`, `firefox`, `safari`, …; supports `browser:profile`) | unset |
 | `X_DL_OUTDIR` | Download directory | `~/Downloads/x-videos` |
-| `X_DL_COOKIES` | Path to a `cookies.txt` for protected posts | unset |
-| `X_DL_COOKIES_FROM` | Browser to pull cookies from | unset |
+| `X_DL_COOKIES` | Path to an exported `cookies.txt` (headless alternative) | unset |
+| `X_DL_COOKIES_FROM` | Deprecated alias for `X_DL_BROWSER` | unset |
 | `YT_DLP` | Path to the `yt-dlp` binary | `yt-dlp` on `PATH` |
+
+> **Tip:** set `X_DL_BROWSER` in the same place the SSH session picks up
+> environment (e.g. your shell profile), or pass it inline in the Shortcut's
+> script line: `X_DL_BROWSER=chrome /path/to/save-x-video.sh "$(cat)"`.
 
 You can also pass an output dir as the 2nd argument:
 `save-x-video.sh <url> /path/to/dir`.
