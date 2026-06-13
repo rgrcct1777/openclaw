@@ -258,3 +258,8 @@ extensions/diffs-language-pack/assets/viewer-runtime.js
 /.opengrep-out/
 /.crabbox-artifacts
 .comux*
+
+# X video downloader: never commit exported login cookies or downloaded videos
+tools/x-video-downloader/*cookies*.txt
+tools/x-video-downloader/*.mp4
+tools/x-video-downloader/downloads/
