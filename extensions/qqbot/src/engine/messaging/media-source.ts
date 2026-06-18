@@ -23,9 +23,9 @@
  * `resolveQQBotPayloadLocalFilePath` / `resolveOutboundMediaPath`) before
  * passing the path in; this function enforces *file-level* safety only.
  *
- * Chunked upload is not implemented in this PR, but the contract here already
- * returns `size` metadata so `sendMediaInternal` can route by size without
- * reading the whole file first.
+ * `openLocalFile` returns `size` metadata so the sender's `dispatchUpload`
+ * can route large files to the chunked uploader by size, without reading the
+ * whole file first.
  */
 
 import type { FileHandle } from "node:fs/promises";

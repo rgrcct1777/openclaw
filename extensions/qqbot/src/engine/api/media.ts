@@ -6,9 +6,8 @@
  * - Upload cache integration via composition (passed in constructor).
  * - Uses `withRetry` from the shared retry engine.
  *
- * Chunked upload for files above `LARGE_FILE_THRESHOLD` is tracked by
- * {@link ./media-chunked.ts}; this module currently handles only the
- * one-shot path.
+ * Chunked upload for files above `LARGE_FILE_THRESHOLD` lives in
+ * {@link ./media-chunked.ts}; this module owns only the one-shot path.
  */
 
 import * as fs from "node:fs";
@@ -192,10 +191,11 @@ export class MediaApi {
   /**
    * Upload media via base64, URL, buffer, or local file path to a C2C or Group target.
    *
-   * The `localPath` and `buffer` branches are equivalent to `fileData` for the
-   * current one-shot implementation — the file is read and base64-encoded
-   * synchronously. They exist as first-class inputs so that a future chunked
-   * upload implementation can consume them without interface churn.
+   * The `localPath` and `buffer` branches are equivalent to `fileData` here —
+   * the file is read and base64-encoded synchronously. They are first-class
+   * inputs so the chunked uploader ({@link ./media-chunked.ts}) can consume the
+   * same shapes; the sender's `dispatchUpload` routes large sources there
+   * before this one-shot path is reached.
    *
    * @param scope - `'c2c'` or `'group'`.
    * @param targetId - User openid or group openid.
@@ -214,13 +214,15 @@ export class MediaApi {
       url?: string;
       fileData?: string;
       /**
-       * Raw bytes in memory. Currently re-encoded to base64 internally;
-       * reserved as a dedicated input for the future chunked uploader.
+       * Raw bytes in memory, re-encoded to base64 for this one-shot path.
+       * Large buffers are routed to the chunked uploader by the sender before
+       * reaching here.
        */
       buffer?: Buffer;
       /**
-       * On-disk path. Currently read + base64-encoded internally; reserved
-       * for streaming ingestion by the future chunked uploader.
+       * On-disk path, read + base64-encoded for this one-shot path. Large
+       * files are routed to the chunked uploader by the sender before reaching
+       * here.
        */
       localPath?: string;
       srvSendMsg?: boolean;
@@ -239,9 +241,9 @@ export class MediaApi {
       );
     }
 
-    // One-shot path: materialize buffer/localPath into fileData.
-    // Future chunked-upload work will branch here on size and route
-    // buffer/localPath through streaming ingestion instead of base64 encoding.
+    // One-shot path: materialize buffer/localPath into fileData. Size-based
+    // routing to the chunked uploader lives in the sender's dispatchUpload, so
+    // anything reaching here is already below LARGE_FILE_THRESHOLD.
     let fileData = opts.fileData;
     if (opts.buffer) {
       fileData = opts.buffer.toString("base64");
